@@ -1,6 +1,6 @@
 # OSGi Bundle for Dremio JDBC Driver
 
-`dremio_jdbc_driver_14.0.0_202103011714040666_9a0c2e10_1.0.0.jar` is an OSGi bundle for Dremio JDBC Driver that can be used with WSO2 DSS. In order to use it, copy the file to <DSS_PRODUCT_HOME>/repository/components/dropins and restart DSS.
+`dremio_jdbc_driver_15.7.0_202106112202490252_2fb62d31_1.0.0` is an OSGi bundle for Dremio JDBC Driver that can be used with WSO2 DSS. In order to use it, copy the file to <DSS_PRODUCT_HOME>/repository/components/dropins and restart DSS.
 
 ## DSS Datasource Configuration
 
