@@ -25,6 +25,7 @@ import config from 'utils/config';
 import * as ButtonTypes from 'components/Buttons/ButtonTypes';
 import Button from '@app/components/Buttons/Button';
 import SimpleButton from 'components/Buttons/SimpleButton';
+import FontIcon from 'components/Icon/FontIcon';
 import { FieldWithError, TextField } from '@app/components/Fields';
 import { getViewState } from 'selectors/resources';
 import { connectComplexForm, InnerComplexForm } from 'components/Forms/connectComplexForm';
@@ -43,7 +44,8 @@ export class LoginForm extends PureComponent {
     // connected
     user: PropTypes.instanceOf(Immutable.Map),
     viewState: PropTypes.instanceOf(Immutable.Map),
-    loginUser: PropTypes.func.isRequired
+    loginUser: PropTypes.func.isRequired,
+    location: PropTypes.object
   };
 
   static defaultProps = {
@@ -63,6 +65,8 @@ export class LoginForm extends PureComponent {
   }
 
   render() {
+    const loginerror = (this.props.location && this.props.location.query) ? this.props.location.query.loginerror : null;
+
     const {
       fields: {
         userName,
@@ -81,6 +85,17 @@ export class LoginForm extends PureComponent {
           OAuth login
           </SimpleButton>
         </a>
+      </div>
+    );
+
+    const oauthErrorMessage = (
+      <div style={{width: '100%', position: 'absolute', top: 0}}>
+        <div style={{backgroundColor: '#FCD9D9', display: 'flex', alignItems: 'center', padding: '5px', borderRadius: '1px'}} ref='messagePanel'>
+          <FontIcon type='ErrorSolid' style={{marginRight: 5, height: 24}}/>
+          <span>
+            OAuth login failed: {loginerror}
+          </span>
+        </div>
       </div>
     );
 
@@ -138,6 +153,7 @@ export class LoginForm extends PureComponent {
           </div>
         </InnerComplexForm>
         {config.authType === 'oauth' ? oauthForm : null}
+        {(config.authType === 'oauth' && 'loginerror' in this.props.location.query) ? oauthErrorMessage : null}
       </ViewStateWrapper>
     );
   }

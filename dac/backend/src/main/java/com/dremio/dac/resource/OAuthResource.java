@@ -76,6 +76,9 @@ public class OAuthResource {
   private final OAuth20Service service;
   private final SecureRandom generator;
 
+  private final String OAUTH2_ERROR = "oauth2_error"; //oauth or parsing error
+  private final String INVALID_USER_ERROR = "invalid_user"; //invalid content (e.g. missing data)
+
   @Inject
   public OAuthResource(DremioConfig dremioConfig, SabotContext dContext, UserService userService,
       SupportService support, TokenManager tokenManager, NamespaceService namespaceService) {
@@ -108,7 +111,7 @@ public class OAuthResource {
       URI uri = URI.create(service.getAuthorizationUrl());
       return Response.temporaryRedirect(uri).build();
     } else {
-      return Response.temporaryRedirect(URI.create("/login")).build();
+      return Response.temporaryRedirect(URI.create("/login?loginerror=" + OAUTH2_ERROR)).build();
     }
   }
 
@@ -122,7 +125,7 @@ public class OAuthResource {
 
     if (code == null) {
       logger.error("code is null");
-      return Response.serverError().build();
+      return Response.temporaryRedirect(URI.create("/login?loginerror=" + OAUTH2_ERROR)).build();
     }
 
     try {
@@ -135,7 +138,8 @@ public class OAuthResource {
       logger.info("access token info parsed as json object: {}", json);
 
       if (json == null) {
-        throw new IllegalArgumentException("access token is not a valid JWT");
+        logger.error("access token is not a valid JWT");
+        throw new IllegalArgumentException(OAUTH2_ERROR);
       }
 
       User userInfo = null;
@@ -165,7 +169,8 @@ public class OAuthResource {
       }*/
 
       if ((userInfo == null) || (userInfo.getUserName().isEmpty() || userInfo.getEmail().isEmpty())) {
-        throw new IllegalArgumentException("user tenant or email cannot be null, empty or invalid");
+        logger.error("user tenant or email are null, empty or invalid");
+        throw new IllegalArgumentException(INVALID_USER_ERROR);
       }
 
       /*if (oauthConfig.requireRoles() && role.isEmpty()) {
@@ -245,9 +250,8 @@ public class OAuthResource {
 
       return Response.ok().entity(response).type(MediaType.TEXT_HTML).build();
     } catch (IllegalArgumentException | UserNotFoundException e) {
-      //return Response.status(UNAUTHORIZED).entity(new GenericErrorMessage(e.getMessage())).build();
-      logger.error("login failed, redirecting to login page due to ", e.getMessage());
-      return Response.temporaryRedirect(URI.create("/login")).build();
+      logger.error("login failed, redirecting to login page due to {}", e.getMessage());
+      return Response.temporaryRedirect(URI.create("/login?loginerror=" + e.getMessage())).build();
 
     } catch (IOException | InterruptedException | ExecutionException | NullPointerException e) {
       logger.error("server error: "+e.getMessage());
